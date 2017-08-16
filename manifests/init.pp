@@ -42,10 +42,18 @@
 #
 class etckeeper (
   $etckeeper_author = false,
-  $etckeeper_email = false
+  $etckeeper_email = false,
+  $vcs = git,
   ) {
 
-  require ::git
+  case $vcs {
+    'hg': {
+      require ::mercurial
+    }
+    'git': {
+      require ::git
+    }
+  }
 
   # HIGHLEVEL_PACKAGE_MANAGER config setting.
   $etckeeper_high_pkg_mgr = $::operatingsystem ? {
