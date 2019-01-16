@@ -96,4 +96,22 @@ class etckeeper (
     creates => '/etc/.git',
     require => Package['etckeeper'],
   }
+
+  file { 'etckeeper-cron-daily':
+    ensure  => present,
+    path    => '/etc/cron.daily/etckeeper',
+    owner   => root,
+    group   => root,
+    mode    => '0644',
+    content => template('etckeeper/cron_daily.erb'),
+  }
+
+  file { 'etckeeper-daily-script':
+    ensure  => present,
+    path    => '/etc/etckeeper/daily',
+    owner   => root,
+    group   => root,
+    mode    => '0644',
+    content => template('etckeeper/script_daily.erb'),
+  }
 }
