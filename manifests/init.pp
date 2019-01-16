@@ -102,7 +102,7 @@ class etckeeper (
     path    => '/etc/cron.daily/etckeeper',
     owner   => root,
     group   => root,
-    mode    => '0644',
+    mode    => '0755',
     content => template('etckeeper/cron_daily.erb'),
   }
 
@@ -111,7 +111,7 @@ class etckeeper (
     path    => '/etc/etckeeper/daily',
     owner   => root,
     group   => root,
-    mode    => '0644',
+    mode    => '0755',
     content => template('etckeeper/script_daily.erb'),
   }
 }
