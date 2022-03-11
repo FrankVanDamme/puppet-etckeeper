@@ -114,4 +114,16 @@ class etckeeper (
     mode    => '0755',
     content => template('etckeeper/script_daily.erb'),
   }
+
+  # Bugfix on Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=884987
+  if ( $operatingsystem == 'Debian' and Integer($facts['os']['release']['major']) <= 11 ) {
+    file { 'etckeeper-precommit-problemfiles':
+        ensure  => present,
+        path    => '/etc/etckeeper/pre-commit.d/20warn-problem-files',
+        owner   => root,
+        group   => root,
+        mode    => '0755',
+        content => template('etckeeper/Debian-20warn-problem-files'),
+    }
+  }
 }
