@@ -56,13 +56,13 @@ class etckeeper (
   }
 
   # HIGHLEVEL_PACKAGE_MANAGER config setting.
-  $etckeeper_high_pkg_mgr = $::operatingsystem ? {
+  $etckeeper_high_pkg_mgr = $facts[os][name] ? {
     /(?i-mx:ubuntu|debian|linuxmint)/                 => 'apt',
     /(?i-mx:centos|fedora|redhat|oraclelinux|amazon)/ => 'yum',
   }
 
   # LOWLEVEL_PACKAGE_MANAGER config setting.
-  $etckeeper_low_pkg_mgr = $::operatingsystem ? {
+  $etckeeper_low_pkg_mgr = $facts[os][name] ? {
     /(?i-mx:ubuntu|debian|linuxmint)/                 => 'dpkg',
     /(?i-mx:centos|fedora|redhat|oraclelinux|amazon)/ => 'rpm',
   }
