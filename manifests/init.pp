@@ -21,6 +21,12 @@
 # [*etckeeper_low_pkg_mgr*]
 #   OS dependent config setting, LOWLEVEL_PACKAGE_MANAGER.
 #
+# [*vcs*]
+#   Choice of version control system
+#
+# [*vcsignore*]
+#   To add or remove lines to and from a vcs' respective ignore file
+#
 # === Examples
 #
 #   include etckeeper
@@ -44,14 +50,19 @@ class etckeeper (
   $etckeeper_author = false,
   $etckeeper_email = false,
   $vcs = git,
+  Array[Hash] $vcsignore = [],
   ) {
 
   case $vcs {
     'hg': {
       require ::mercurial
+      $ignorefile="/etc/.hgignore"
     }
     'git': {
       require ::git
+      $ignorefile="/etc/.gitignore"
+    }
+    default: {
     }
   }
 
@@ -91,11 +102,44 @@ class etckeeper (
     content => template('etckeeper/etckeeper.conf.erb'),
   }
 
+  $vcsignore.each | $str | {
+    $ignored_file=$str['entry']
+    $cmd=$str['cmd']
+
+    case $cmd {
+      'ins': {
+        augeas { "etckeeper_ignore_${ignored_file}":
+          lens    => "Simplelines.lns",
+          incl    => $ignorefile,
+          context => "/files/${ignorefile}",
+          onlyif  => "match *['${ignored_file}'] size == 0",
+          # eerst label maken, dan setten. gewoon nieuw inserten kan niet.
+          # de last functie zet laatste entry met bepaald label, binnen de context is dit "alles" (*)
+          # volgnummers zijn arbitrair maar hebben bij inladen geen leading zero ...
+          changes => ["ins 003 after *[last()]", "set 003 ${ignored_file}"],
+          require => [Exec['etckeeper-init'], Package['etckeeper']],
+        }
+      }
+      'rm': {
+        augeas { "etckeeper_ignore_${ignored_file}":
+          lens    => "Simplelines.lns",
+          incl    => $ignorefile,
+          context => "/files/${ignorefile}",
+          changes => ["rm *['${ignored_file}']"],
+          require => [Exec['etckeeper-init'], Package['etckeeper']],
+        }
+      }
+      default: {
+        fail("${cmd} is niet aanvaard")
+      }
+    }
+  }
+
   exec { 'etckeeper-init':
     command => 'etckeeper init',
     path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
     cwd     => '/etc',
-    creates => '/etc/.git',
+    creates => "/etc/.${vcs}",
     require => Package['etckeeper'],
   }
 
@@ -118,7 +162,7 @@ class etckeeper (
   }
 
   # Bugfix on Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=884987
-  if ( $operatingsystem == 'Debian' and Integer($facts['os']['release']['major']) <= 11 ) {
+  if ( $facts['os']['name'] == 'Debian' and Integer($facts['os']['release']['major']) <= 11 ) {
     file { 'etckeeper-precommit-problemfiles':
         ensure  => present,
         path    => '/etc/etckeeper/pre-commit.d/20warn-problem-files',
