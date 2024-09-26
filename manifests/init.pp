@@ -162,14 +162,16 @@ class etckeeper (
   }
 
   # Bugfix on Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=884987
-  if ( $facts['os']['name'] == 'Debian' and Integer($facts['os']['release']['major']) <= 11 ) {
-    file { 'etckeeper-precommit-problemfiles':
-        ensure  => present,
-        path    => '/etc/etckeeper/pre-commit.d/20warn-problem-files',
-        owner   => root,
-        group   => root,
-        mode    => '0755',
-        content => template('etckeeper/Debian-20warn-problem-files'),
+  if ( $facts[os][release][major] !~ /\/sid/ ){
+    if ( $facts['os']['name'] == 'Debian' and Integer($facts['os']['release']['major']) <= 11 ) {
+      file { 'etckeeper-precommit-problemfiles':
+          ensure  => present,
+          path    => '/etc/etckeeper/pre-commit.d/20warn-problem-files',
+          owner   => root,
+          group   => root,
+          mode    => '0755',
+          content => template('etckeeper/Debian-20warn-problem-files'),
+      }
     }
   }
 }
